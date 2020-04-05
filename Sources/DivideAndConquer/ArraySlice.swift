@@ -1266,7 +1266,7 @@ extension ArraySlice {
     // It is not OK for there to be no pointer/not enough space, as this is
     // a precondition and Array never lies about its count.
     guard var p = buffer.baseAddress
-      else { _preconditionFailure("Attempt to copy contents into nil buffer pointer") }
+      else { fatalError("Attempt to copy contents into nil buffer pointer") }
     _precondition(self.count <= buffer.count, 
       "Insufficient space allocated to copy array contents")
 
@@ -1282,8 +1282,7 @@ extension ArraySlice {
       }
     }
 
-    var it = IndexingIterator(_elements: self)
-    it._position = endIndex
+    let it = IndexingIterator(_elements: self, _position: endIndex)
     return (it,buffer.index(buffer.startIndex, offsetBy: self.count))
   }
 }

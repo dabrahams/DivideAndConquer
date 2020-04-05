@@ -102,8 +102,11 @@ internal struct _SliceBuffer<Element>
   @inlinable
   internal var nativeBuffer: NativeBuffer {
     _internalInvariant(_hasNativeBuffer)
+    fatalError("unimplementable outside stdlib")
+    /*
     return NativeBuffer(
-      owner as? __ContiguousArrayStorageBase ?? _emptyArrayStorage)
+      owner as __ContiguousArrayStorageBase ?? _emptyArrayStorage)
+     */
   }
 
   @inlinable

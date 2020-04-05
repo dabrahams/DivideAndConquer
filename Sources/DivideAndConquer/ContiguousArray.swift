@@ -1084,9 +1084,10 @@ extension ContiguousArray {
       _ buffer: inout UnsafeMutableBufferPointer<Element>,
       _ initializedCount: inout Int) throws -> Void
   ) rethrows {
-    self = try ContiguousArray(Array(
-      _unsafeUninitializedCapacity: unsafeUninitializedCapacity,
-      initializingWith: initializer))
+    _buffer = .init(
+        _uninitializedCount: 0, minimumCapacity: unsafeUninitializedCapacity)
+    var b = UnsafeMutableBufferPointer(start: _baseAddress, count: capacity)
+    try initializer(&b, &_buffer.count)
   }
 
   /// Calls a closure with a pointer to the array's contiguous storage.
@@ -1207,14 +1208,14 @@ extension ContiguousArray {
   @inlinable
   public __consuming func _copyContents(
     initializing buffer: UnsafeMutableBufferPointer<Element>
-  ) -> (Iterator,UnsafeMutableBufferPointer<Element>.Index) {
+  ) -> (Iterator, UnsafeMutableBufferPointer<Element>.Index) {
 
     guard !self.isEmpty else { return (makeIterator(),buffer.startIndex) }
 
     // It is not OK for there to be no pointer/not enough space, as this is
     // a precondition and Array never lies about its count.
     guard var p = buffer.baseAddress
-      else { _preconditionFailure("Attempt to copy contents into nil buffer pointer") }
+      else { fatalError("Attempt to copy contents into nil buffer pointer") }
     _precondition(self.count <= buffer.count, 
       "Insufficient space allocated to copy array contents")
 
@@ -1230,9 +1231,8 @@ extension ContiguousArray {
       }
     }
 
-    var it = IndexingIterator(_elements: self)
-    it._position = endIndex
-    return (it,buffer.index(buffer.startIndex, offsetBy: self.count))
+    let it = IndexingIterator(_elements: self, _position: endIndex)
+    return (it, buffer.index(buffer.startIndex, offsetBy: self.count))
   }
 }
 

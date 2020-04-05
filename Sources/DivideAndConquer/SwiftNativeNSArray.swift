@@ -509,10 +509,4 @@ internal class __ContiguousArrayStorageBase
     _internalInvariantFailure(
       "Concrete subclasses must implement staticElementType")
   }
-  
-  @inlinable
-  deinit {
-    _internalInvariant(
-      self !== _emptyArrayStorage, "Deallocating empty array storage?!")
-  }
 }
