@@ -17,6 +17,7 @@ internal struct _SliceBuffer<Element>
   : _ArrayBufferProtocol,
     RandomAccessCollection
 {
+  @usableFromInline
   internal typealias NativeStorage = _ContiguousArrayStorage<Element>
   @usableFromInline
   internal typealias NativeBuffer = _ContiguousArrayBuffer<Element>
@@ -102,11 +103,8 @@ internal struct _SliceBuffer<Element>
   @inlinable
   internal var nativeBuffer: NativeBuffer {
     _internalInvariant(_hasNativeBuffer)
-    fatalError("unimplementable outside stdlib")
-    /*
-    return NativeBuffer(
-      owner as __ContiguousArrayStorageBase ?? _emptyArrayStorage)
-     */
+    let storage = owner as! _ContiguousArrayStorage<Element>
+    return NativeBuffer(storage)
   }
 
   @inlinable

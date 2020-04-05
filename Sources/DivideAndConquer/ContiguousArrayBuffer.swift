@@ -250,6 +250,11 @@ internal struct _ContiguousArrayBuffer<Element>: _ArrayBufferProtocol {
     } as! _ContiguousArrayStorage
   }
 
+  @inlinable
+  internal init(_ storage: _ContiguousArrayStorage<Element>) {
+    _storage = storage
+  }
+  
   /// True, if the array is native and does not need a deferred type check.
   @inlinable
   internal var arrayPropertyIsNativeTypeChecked: Bool {
