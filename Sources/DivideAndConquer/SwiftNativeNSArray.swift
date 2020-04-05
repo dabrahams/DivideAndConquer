@@ -17,6 +17,7 @@
 //  override Objective-C selectors.
 //
 //===----------------------------------------------------------------------===//
+var gaggle = 3
 
 #if false // _runtime(_ObjC)
 import SwiftShims
