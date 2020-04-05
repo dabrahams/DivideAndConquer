@@ -12,6 +12,14 @@
 
 import SwiftShims
 
+@usableFromInline
+func _internalInvariantFailure(_: String) -> Never { fatalError() }
+
+@usableFromInline
+func _precondition(_ cond: @autoclosure ()->Bool, _ msg: String = "") {
+    precondition(cond(), msg)
+}
+
 /// Class used whose sole instance is used as storage for empty
 /// arrays.  The instance is defined in the runtime and statically
 /// initialized.  See stdlib/runtime/GlobalObjects.cpp for details.
@@ -27,24 +35,12 @@ import SwiftShims
 internal final class __EmptyArrayStorage
   : __ContiguousArrayStorageBase {
 
-  @inlinable
+//  @inlinable
   @nonobjc
   internal init(_doNotCallMe: ()) {
     _internalInvariantFailure("creating instance of __EmptyArrayStorage")
   }
   
-#if _runtime(_ObjC)
-  override internal func _withVerbatimBridgedUnsafeBuffer<R>(
-    _ body: (UnsafeBufferPointer<AnyObject>) throws -> R
-  ) rethrows -> R? {
-    return try body(UnsafeBufferPointer(start: nil, count: 0))
-  }
-
-  override internal func _getNonVerbatimBridgingBuffer() -> _BridgingBuffer {
-    return _BridgingBuffer(0)
-  }
-#endif
-
   @inlinable
   override internal func canStoreElements(ofDynamicType _: Any.Type) -> Bool {
     return false
@@ -61,8 +57,9 @@ internal final class __EmptyArrayStorage
 /// `[Native]Array<Element>`s.
 @inlinable
 internal var _emptyArrayStorage: __EmptyArrayStorage {
-  return Builtin.bridgeFromRawPointer(
-    Builtin.addressof(&_swiftEmptyArrayStorage))
+  withUnsafeMutablePointer(to: &_swiftEmptyArrayStorage) {
+    unsafeBitCast($0, to: __EmptyArrayStorage.self)
+  }
 }
 
 // The class that implements the storage for a ContiguousArray<Element>
@@ -78,9 +75,9 @@ internal final class _ContiguousArrayStorage<
     _fixLifetime(self)
   }
 
-#if _runtime(_ObjC)
+#if false // _runtime(_ObjC)
   
-  internal final override func withUnsafeBufferOfObjects<R>(
+  internal final func withUnsafeBufferOfObjects<R>(
     _ body: (UnsafeBufferPointer<AnyObject>) throws -> R
   ) rethrows -> R {
     _internalInvariant(_isBridgedVerbatimToObjectiveC(Element.self))
@@ -89,29 +86,6 @@ internal final class _ContiguousArrayStorage<
       .assumingMemoryBound(to: AnyObject.self)
     defer { _fixLifetime(self) }
     return try body(UnsafeBufferPointer(start: elements, count: count))
-  }
-  
-  @objc(countByEnumeratingWithState:objects:count:)
-  @_effects(releasenone)
-  internal final override func countByEnumerating(
-    with state: UnsafeMutablePointer<_SwiftNSFastEnumerationState>,
-    objects: UnsafeMutablePointer<AnyObject>?, count: Int
-  ) -> Int {
-    var enumerationState = state.pointee
-    
-    if enumerationState.state != 0 {
-      return 0
-    }
-    
-    return withUnsafeBufferOfObjects {
-      objects in
-      enumerationState.mutationsPtr = _fastEnumerationStorageMutationsPtr
-      enumerationState.itemsPtr =
-        AutoreleasingUnsafeMutablePointer(objects.baseAddress)
-      enumerationState.state = 1
-      state.pointee = enumerationState
-      return objects.count
-    }
   }
   
   @inline(__always)
@@ -126,54 +100,10 @@ internal final class _ContiguousArrayStorage<
     }
   }
   
-  @objc(objectAtIndexedSubscript:)
-  @_effects(readonly)
-  final override internal func objectAtSubscript(_ index: Int) -> Unmanaged<AnyObject> {
-    return _objectAt(index)
-  }
-  
-  @objc(objectAtIndex:)
-  @_effects(readonly)
-  final override internal func objectAt(_ index: Int) -> Unmanaged<AnyObject> {
-    return _objectAt(index)
-  }
-  
-  @objc internal override final var count: Int {
-    @_effects(readonly) get {
-      return withUnsafeBufferOfObjects { $0.count }
-    }
-  }
-
-  @_effects(releasenone)
-  @objc internal override final func getObjects(
-    _ aBuffer: UnsafeMutablePointer<AnyObject>, range: _SwiftNSRange
-  ) {
-    return withUnsafeBufferOfObjects {
-      objects in
-      _precondition(
-        _isValidArrayIndex(range.location, count: objects.count),
-        "Array index out of range")
-
-      _precondition(
-        _isValidArrayIndex(
-          range.location + range.length, count: objects.count),
-        "Array index out of range")
-
-      if objects.isEmpty { return }
-
-      // These objects are "returned" at +0, so treat them as pointer values to
-      // avoid retains. Copy bytes via a raw pointer to circumvent reference
-      // counting while correctly aliasing with all other pointer types.
-      UnsafeMutableRawPointer(aBuffer).copyMemory(
-        from: objects.baseAddress! + range.location,
-        byteCount: range.length * MemoryLayout<AnyObject>.stride)
-    }
-  }
-  
   /// If the `Element` is bridged verbatim, invoke `body` on an
   /// `UnsafeBufferPointer` to the elements and return the result.
   /// Otherwise, return `nil`.
-  internal final override func _withVerbatimBridgedUnsafeBuffer<R>(
+  internal final func _withVerbatimBridgedUnsafeBuffer<R>(
     _ body: (UnsafeBufferPointer<AnyObject>) throws -> R
   ) rethrows -> R? {
     var result: R?
@@ -196,24 +126,6 @@ internal final class _ContiguousArrayStorage<
       try body(UnsafeBufferPointer(start: elements, count: count))
     }
   }
-
-  /// Bridge array elements and return a new buffer that owns them.
-  ///
-  /// - Precondition: `Element` is bridged non-verbatim.
-  override internal func _getNonVerbatimBridgingBuffer() -> _BridgingBuffer {
-    _internalInvariant(
-      !_isBridgedVerbatimToObjectiveC(Element.self),
-      "Verbatim bridging should be handled separately")
-    let count = countAndCapacity.count
-    let result = _BridgingBuffer(count)
-    let resultPtr = result.baseAddress
-    let p = _elementPointer
-    for i in 0..<count {
-      (resultPtr + i).initialize(to: _bridgeAnythingToObjectiveC(p[i]))
-    }
-    _fixLifetime(self)
-    return result
-  }
 #endif
 
   /// Returns `true` if the `proposedElementType` is `Element` or a subclass of
@@ -221,7 +133,7 @@ internal final class _ContiguousArrayStorage<
   /// safety; for example, the destructor has static knowledge that
   /// all of the elements can be destroyed as `Element`.
   @inlinable
-  internal override func canStoreElements(
+  override internal func canStoreElements(
     ofDynamicType proposedElementType: Any.Type
   ) -> Bool {
 #if _runtime(_ObjC)
@@ -235,7 +147,7 @@ internal final class _ContiguousArrayStorage<
 
   /// A type that every element in the array is.
   @inlinable
-  internal override var staticElementType: Any.Type {
+  override internal var staticElementType: Any.Type {
     return Element.self
   }
 

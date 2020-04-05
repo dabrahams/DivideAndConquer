@@ -17,6 +17,25 @@
 
 import SwiftShims
 
+/// Internal checks.
+///
+/// Internal checks are to be used for checking correctness conditions in the
+/// standard library. They are only enable when the standard library is built
+/// with the build configuration INTERNAL_CHECKS_ENABLED enabled. Otherwise, the
+/// call to this function is a noop.
+@usableFromInline @_transparent
+internal func _internalInvariant(
+  _ condition: @autoclosure () -> Bool, _ message: StaticString = StaticString(),
+  file: StaticString = #file, line: UInt = #line
+) {
+#if INTERNAL_CHECKS_ENABLED
+  if !_fastPath(condition()) {
+    _fatalErrorMessage("Fatal error", message, file: file, line: line,
+      flags: _fatalErrorFlags())
+  }
+#endif
+}
+
 @frozen
 @usableFromInline
 internal struct _ArrayBody {

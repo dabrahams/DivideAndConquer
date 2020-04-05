@@ -24,6 +24,10 @@ public struct _DependenceToken {
   }
 }
 
+@usableFromInline
+func _debugPrecondition(_ x: @autoclosure ()->Bool, _: String = "") {  }
+
+/*
 /// Returns an Array of `_count` uninitialized elements using the
 /// given `storage`, and a pointer to uninitialized memory for the
 /// first element.
@@ -63,6 +67,7 @@ func _deallocateUninitializedArray<Element>(
   var array = array
   array._deallocateUninitialized()
 }
+ */
 
 
 extension Collection {  
