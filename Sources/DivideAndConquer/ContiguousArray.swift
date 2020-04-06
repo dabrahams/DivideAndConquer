@@ -17,8 +17,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import DivideAndConquerShims
-
 /// A contiguously stored array.
 ///
 /// The `ContiguousArray` type is a specialized array that always stores its
@@ -431,6 +429,7 @@ extension ContiguousArray: RandomAccessCollection, MutableCollection {
       _checkIndex(bounds.lowerBound)
       _checkIndex(bounds.upperBound)
       var y = ArraySlice(_buffer: _buffer[bounds])
+      print(isDuallyReferenced(&y._buffer.owner))
       yield &y
       // If the replacement buffer has same identity, and the ranges match,
       // then this was a pinned in-place modification, nothing further needed.

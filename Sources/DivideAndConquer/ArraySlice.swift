@@ -15,8 +15,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import DivideAndConquerShims
-
 /// A slice of an `Array`, `ContiguousArray`, or `ArraySlice` instance.
 ///
 /// The `ArraySlice` type makes it fast and efficient for you to perform
@@ -577,6 +575,7 @@ extension ArraySlice: RandomAccessCollection, MutableCollection {
       _checkIndex(bounds.lowerBound)
       _checkIndex(bounds.upperBound)
       var y = ArraySlice(_buffer: _buffer[bounds])
+      print(isDuallyReferenced(&y._buffer.owner))
       yield &y
       // If the replacement buffer has same identity, and the ranges match,
       // then this was a pinned in-place modification, nothing further needed.
