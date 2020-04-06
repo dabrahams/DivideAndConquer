@@ -7,7 +7,9 @@ class Box<T> {
   var x: T
 }
 
-var escape: Any?
+/// A thing that lets us attempt to interfere with correctness by escaping
+/// copies of the array slice and making mutations in a copy.
+var interference: Any?
 
 extension DivideAndConquer.ArraySlice {
   /// Scramble `self`, returning the number of reallocations due to COW, given
@@ -18,10 +20,17 @@ extension DivideAndConquer.ArraySlice {
     let base = withUnsafeBufferPointer { $0.baseAddress! }
     var reallocations = expectedFootprint.contains(base) ? 0 : 1
     if count < 1 { return reallocations }
-    if escape != nil && count > 1 {
-      var x = self
-      x[0] = x[1]
+    
+    if interference != nil && count > 1 {
+      if count % 2 == 0 {
+        var x = self
+        x[startIndex] = x[startIndex + 1]
+      }
+      else {
+        interference = self
+      }
     }
+    
     if count < 4 {
       swapAt(startIndex, endIndex - 1)
     }
@@ -86,14 +95,18 @@ final class DivideAndConquerTests: XCTestCase {
     let reallocs0 = a0.scramble()
     XCTAssertEqual(reallocs0, 0)
     
-    escape = 1 // turn on escaping
+    interference = 1 // turn on interference
+    defer { interference = nil }
+    
     let reallocs: Int
     do {
       var a = DivideAndConquer.ContiguousArray(0..<500)
       reallocs = a.scramble()
-      escape = nil
+      // Should have the same result.
       XCTAssert(a.elementsEqual(a0))
     }
+    // `a` should have been released by now, so we check this after potential
+    // overrelease.
     XCTAssertNotEqual(reallocs, 0)
   }
   

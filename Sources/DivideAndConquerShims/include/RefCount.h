@@ -641,6 +641,25 @@ class RefCountBitsT {
   }
 
   LLVM_ATTRIBUTE_ALWAYS_INLINE
+  uint32_t strongRefCount() {
+    static_assert(Offsets::UnownedRefCountBitCount +
+                  Offsets::IsDeinitingBitCount +
+                  Offsets::StrongExtraRefCountBitCount +
+                  Offsets::PureSwiftDeallocBitCount +
+                  Offsets::UseSlowRCBitCount == sizeof(bits)*8,
+                  "inspect isUniquelyReferenced after adding fields");
+
+    // Unowned: don't care (FIXME: should care and redo initForNotFreeing)
+    // IsDeiniting: false
+    // StrongExtra: 0
+    // UseSlowRC: false
+
+    // Compiler is clever enough to optimize this.
+    return getUseSlowRC()  || getIsDeiniting()
+        ? std::numeric_limits<uint32_t>::max() : getStrongExtraRefCount();
+  }
+
+  LLVM_ATTRIBUTE_ALWAYS_INLINE
   BitsType getBitsValue() {
     return bits;
   }
@@ -956,6 +975,17 @@ class RefCounts {
     
     assert(!bits.getIsDeiniting());
     return bits.isDuallyReferenced();
+  }
+
+  // Return the strong reference count.
+  // Once deinit begins the reference count is undefined.
+  uint32_t strongRefCount() const {
+    auto bits = refCounts.load(SWIFT_MEMORY_ORDER_CONSUME);
+    if (bits.hasSideTable())
+      return bits.getSideTable()->strongRefCount();
+    
+    assert(!bits.getIsDeiniting());
+    return bits.strongRefCount();
   }
 
   // Return true if the object has started deiniting.
@@ -1373,6 +1403,10 @@ class HeapObjectSideTableEntry {
 
   bool isDuallyReferenced() const {
     return refCounts.isDuallyReferenced();
+  }
+
+  uint32_t strongRefCount() const {
+    return refCounts.strongRefCount();
   }
 
   // UNOWNED
