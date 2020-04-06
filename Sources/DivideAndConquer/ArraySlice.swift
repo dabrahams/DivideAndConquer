@@ -533,7 +533,9 @@ extension ArraySlice: RandomAccessCollection, MutableCollection {
         matchingSubscriptCheck: token)
     }
     _modify {
-      _makeMutableAndUnique() // makes the array native, too
+      if !_buffer.nativeBuffer._storage.isMutatingAsInSituSlice  {
+        _makeMutableAndUnique() // makes the array native, too
+      }
       _checkSubscript_native(index)
       let address = _buffer.subscriptBaseAddress + index
       yield &address.pointee
