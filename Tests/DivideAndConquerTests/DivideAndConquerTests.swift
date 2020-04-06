@@ -15,10 +15,13 @@ extension DivideAndConquer.ArraySlice {
   mutating func scramble(
       in expectedFootprint: ClosedRange<UnsafePointer<Element>>) -> Int
   {
-    if escape != nil { escape = self }
     let base = withUnsafeBufferPointer { $0.baseAddress! }
     var reallocations = expectedFootprint.contains(base) ? 0 : 1
     if count < 1 { return reallocations }
+    if escape != nil && count > 1 {
+      var x = self
+      x[0] = x[1]
+    }
     if count < 4 {
       swapAt(startIndex, endIndex - 1)
     }
