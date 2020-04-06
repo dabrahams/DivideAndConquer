@@ -656,7 +656,7 @@ class RefCountBitsT {
 
     // Compiler is clever enough to optimize this.
     return getUseSlowRC()  || getIsDeiniting()
-        ? std::numeric_limits<uint32_t>::max() : getStrongExtraRefCount();
+        ? 0xFFFFFFFF : getStrongExtraRefCount();
   }
 
   LLVM_ATTRIBUTE_ALWAYS_INLINE
