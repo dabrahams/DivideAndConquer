@@ -17,6 +17,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+import DivideAndConquerShims
+
 /// A contiguously stored array.
 ///
 /// The `ContiguousArray` type is a specialized array that always stores its

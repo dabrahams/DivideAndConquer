@@ -76,6 +76,9 @@ extern "C" {
 #endif
 
 SWIFT_RUNTIME_STDLIB_API
+__swift_uint8_t swift_isDuallyReferenced(HeapObject *obj);
+    
+SWIFT_RUNTIME_STDLIB_API
 void _swift_instantiateInertHeapObject(void *address,
                                        const HeapMetadata *metadata);
 
