@@ -37,6 +37,16 @@ public struct _CountAndCapacity {
     return Int(truncatingIfNeeded: capacityAndFlags >> 1)
   }
 
+  @inlinable
+  var isMutatingAsInSituSlice: Bool {
+    get {
+      return (capacityAndFlags & 1) != 0
+    }
+    set {
+      if isMutatingAsInSituSlice != newValue { capacityAndFlags ^= 1 }
+    }
+  }
+
   @usableFromInline
   var capacityAndFlags: UInt
 }
@@ -66,6 +76,12 @@ public
     }
   }
 
+  @usableFromInline
+  var isMutatingAsInSituSlice: Bool {
+    get { header.isMutatingAsInSituSlice }
+    set { header.isMutatingAsInSituSlice = newValue }
+  }
+  
   @usableFromInline
   var countAndCapacity: _CountAndCapacity {
    get { header }
