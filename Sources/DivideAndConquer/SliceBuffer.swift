@@ -425,3 +425,15 @@ extension _SliceBuffer {
     return ContiguousArray(_buffer: result)
   }
 }
+
+extension _SliceBuffer {
+  /// True iff `self` can be mutated by writing on elements even though its
+  /// buffer is not uniquely-referenced.
+  @usableFromInline
+  var isBorrowedAndNotReShared: Bool {
+    mutating get {
+      return nativeBuffer._storage.isMutatingAsInPlaceSlice
+          && isDuallyReferenced(&owner)
+    }
+  }
+}
