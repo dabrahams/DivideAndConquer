@@ -581,16 +581,16 @@ extension ArraySlice: RandomAccessCollection, MutableCollection {
       let borrowedOwner = _buffer.isBorrowedAndNotReShared
           ? Unmanaged.passUnretained(_buffer.owner) : nil
       
-      var y = ArraySlice(_buffer: _buffer[bounds])
+      var rhs = ArraySlice(_buffer: _buffer[bounds])
       borrowedOwner?.release() // Continue to allow in-place mutation
-      yield &y
+      yield &rhs
       _ = borrowedOwner?.retain() // Restore the reference count
       
       // If the replacement buffer has same identity, and the ranges match,
       // then this was a pinned in-place modification, nothing further needed.
-      if self[bounds]._buffer.identity != y._buffer.identity
-      || bounds != y.startIndex..<y.endIndex {
-        self.replaceSubrange(bounds, with: y)
+      if self[bounds]._buffer.identity != rhs._buffer.identity
+      || bounds != rhs.startIndex..<rhs.endIndex {
+        self.replaceSubrange(bounds, with: rhs)
       }
     }
   }
