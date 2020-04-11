@@ -579,27 +579,15 @@ extension ArraySlice: RandomAccessCollection, MutableCollection {
       _checkIndex(bounds.lowerBound)
       _checkIndex(bounds.upperBound)
       
-      var y: ArraySlice
-      if isDuallyReferenced(&_buffer.owner) 
-      && _buffer.nativeBuffer._storage.isMutatingAsInSituSlice {
-        let saveOwner = Unmanaged.passUnretained(_buffer.owner)
-        let saveSubscriptBaseAddress = _buffer.subscriptBaseAddress
-        let saveStartIndex = _buffer.startIndex
-        let saveEndIndexAndFlags = _buffer.endIndexAndFlags
-        self = ArraySlice(_buffer: _buffer[bounds])
-        yield &self
-        y = self
-        self = ArraySlice(
-          _buffer: _SliceBuffer<Element>(
-            owner: saveOwner.takeUnretainedValue(),
-            subscriptBaseAddress: saveSubscriptBaseAddress,
-            startIndex: saveStartIndex,
-            endIndexAndFlags: saveEndIndexAndFlags))
-      }
-      else {
-        y = ArraySlice(_buffer: _buffer[bounds])
-        yield &y
-      }
+      let inSituOwner = isDuallyReferenced(&_buffer.owner) 
+          && _buffer.nativeBuffer._storage.isMutatingAsInSituSlice ?
+          Unmanaged.passUnretained(_buffer.owner) : nil
+      
+      var y = ArraySlice(_buffer: _buffer[bounds])
+      inSituOwner?.release()
+      yield &y
+      _ = inSituOwner?.retain()
+      
       // If the replacement buffer has same identity, and the ranges match,
       // then this was a pinned in-place modification, nothing further needed.
       if self[bounds]._buffer.identity != y._buffer.identity
