@@ -38,12 +38,12 @@ public struct _CountAndCapacity {
   }
 
   @inlinable
-  var isMutatingAsInSituSlice: Bool {
+  var isMutatingAsInPlaceSlice: Bool {
     get {
       return (capacityAndFlags & 1) != 0
     }
     set {
-      if isMutatingAsInSituSlice != newValue { capacityAndFlags ^= 1 }
+      if isMutatingAsInPlaceSlice != newValue { capacityAndFlags ^= 1 }
     }
   }
 
@@ -77,9 +77,9 @@ public
   }
 
   @usableFromInline
-  var isMutatingAsInSituSlice: Bool {
-    get { header.isMutatingAsInSituSlice }
-    set { header.isMutatingAsInSituSlice = newValue }
+  var isMutatingAsInPlaceSlice: Bool {
+    get { header.isMutatingAsInPlaceSlice }
+    set { header.isMutatingAsInPlaceSlice = newValue }
   }
   
   @usableFromInline

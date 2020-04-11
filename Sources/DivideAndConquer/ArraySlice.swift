@@ -533,7 +533,7 @@ extension ArraySlice: RandomAccessCollection, MutableCollection {
         matchingSubscriptCheck: token)
     }
     _modify {
-      if !_buffer.nativeBuffer._storage.isMutatingAsInSituSlice
+      if !_buffer.nativeBuffer._storage.isMutatingAsInPlaceSlice
       || !isDuallyReferenced(&_buffer.owner)
       {
         _makeMutableAndUnique() // makes the array native, too
@@ -580,7 +580,7 @@ extension ArraySlice: RandomAccessCollection, MutableCollection {
       _checkIndex(bounds.upperBound)
       
       let inSituOwner = isDuallyReferenced(&_buffer.owner) 
-          && _buffer.nativeBuffer._storage.isMutatingAsInSituSlice ?
+          && _buffer.nativeBuffer._storage.isMutatingAsInPlaceSlice ?
           Unmanaged.passUnretained(_buffer.owner) : nil
       
       var y = ArraySlice(_buffer: _buffer[bounds])

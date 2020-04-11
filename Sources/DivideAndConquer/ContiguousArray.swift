@@ -431,12 +431,12 @@ extension ContiguousArray: RandomAccessCollection, MutableCollection {
       var y = ArraySlice(_buffer: _buffer[bounds])
       let dualRef = isDuallyReferenced(&y._buffer.owner)
       if dualRef {
-        _internalInvariant(!_buffer._storage.isMutatingAsInSituSlice)
-        _buffer._storage.isMutatingAsInSituSlice = true
+        _internalInvariant(!_buffer._storage.isMutatingAsInPlaceSlice)
+        _buffer._storage.isMutatingAsInPlaceSlice = true
       }
       yield &y
       if dualRef {
-        _buffer._storage.isMutatingAsInSituSlice = false
+        _buffer._storage.isMutatingAsInPlaceSlice = false
       }
       // If the replacement buffer has same identity, and the ranges match,
       // then this was a pinned in-place modification, nothing further needed.
