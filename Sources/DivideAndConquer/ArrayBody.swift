@@ -25,15 +25,11 @@ import SwiftShims
 /// call to this function is a noop.
 @usableFromInline @_transparent
 internal func _internalInvariant(
-  _ condition: @autoclosure () -> Bool, _ message: StaticString = StaticString(),
+  _ condition: @autoclosure () -> Bool, _ message: String = "",
   file: StaticString = #file, line: UInt = #line
 ) {
-#if INTERNAL_CHECKS_ENABLED
-  if !_fastPath(condition()) {
-    _fatalErrorMessage("Fatal error", message, file: file, line: line,
-      flags: _fatalErrorFlags())
-  }
-#endif
+  if condition() { return }
+  fatalError(message, file: file, line: line)
 }
 
 @frozen

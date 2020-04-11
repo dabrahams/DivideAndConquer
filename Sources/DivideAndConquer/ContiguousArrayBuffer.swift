@@ -16,19 +16,31 @@ import SwiftShims
 func _internalInvariantFailure(_: String) -> Never { fatalError() }
 
 @usableFromInline
-func _precondition(_ cond: @autoclosure ()->Bool, _ msg: String = "") {
-    precondition(cond(), msg)
+func _precondition(
+    _ cond: @autoclosure ()->Bool,
+    _ msg: String = "",
+    file: StaticString = #file, line: UInt = #line
+) {
+  precondition(cond(), msg, file: file, line: line)
 }
 
 @frozen
 public struct _CountAndCapacity {
   public init(count: Int, capacity: Int) {
     self.count = count
-    self.capacity = capacity
+    self.capacityAndFlags = UInt(capacity) << 1
   }
   public var count: Int
-  public let capacity: Int
+
+  @inlinable
+  public var capacity: Int {
+    return Int(truncatingIfNeeded: capacityAndFlags >> 1)
+  }
+
+  @usableFromInline
+  var capacityAndFlags: UInt
 }
+
 
 @inlinable
 @inline(__always)

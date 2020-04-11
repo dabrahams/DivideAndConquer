@@ -3,6 +3,8 @@
 
 import PackageDescription
 
+let optimize = [SwiftSetting.unsafeFlags(["-cross-module-optimization", "-O"])]
+
 let package = Package(
     name: "DivideAndConquer",
     products: [
@@ -20,13 +22,16 @@ let package = Package(
         // Targets can depend on other targets in this package, and on products in packages which this package depends on.
         .target(
             name: "DivideAndConquer",
-            dependencies: ["DivideAndConquerShims"]),
+            dependencies: ["DivideAndConquerShims"],
+            swiftSettings: optimize),
         .target(
             name: "DivideAndConquerShims",
-            dependencies: []),
+            dependencies: [],
+            swiftSettings: optimize),
         .testTarget(
             name: "DivideAndConquerTests",
-            dependencies: ["DivideAndConquer"]),
+            dependencies: ["DivideAndConquer"],
+            swiftSettings: optimize),
     ],
     cxxLanguageStandard: .cxx1z
 )

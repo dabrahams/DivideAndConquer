@@ -88,7 +88,7 @@ internal struct _SliceBuffer<Element>
   @inlinable // FIXME(sil-serialize-all)
   internal func _invariantCheck() {
     let isNative = _hasNativeBuffer
-    let isNativeStorage: Bool = owner is __ContiguousArrayStorageBase
+    let isNativeStorage: Bool = owner is _ContiguousArrayStorage<Element>
     _internalInvariant(isNativeStorage == isNative)
     if isNative {
       _internalInvariant(count <= nativeBuffer.count)
