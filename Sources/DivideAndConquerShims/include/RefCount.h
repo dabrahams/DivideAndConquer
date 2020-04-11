@@ -621,6 +621,7 @@ class RefCountBitsT {
       !getUseSlowRC() && !getIsDeiniting() && getStrongExtraRefCount() == 0;
   }
 
+  // Returns nonzero iff there are exactly two strong references to `self`.
   LLVM_ATTRIBUTE_ALWAYS_INLINE
   bool isDuallyReferenced() {
     static_assert(Offsets::UnownedRefCountBitCount +
@@ -640,6 +641,7 @@ class RefCountBitsT {
       !getUseSlowRC() && !getIsDeiniting() && getStrongExtraRefCount() == 1;
   }
 
+  // Returns nonzero iff the number of strong references to `self`.
   LLVM_ATTRIBUTE_ALWAYS_INLINE
   uint32_t strongRefCount() {
     static_assert(Offsets::UnownedRefCountBitCount +
@@ -656,7 +658,7 @@ class RefCountBitsT {
 
     // Compiler is clever enough to optimize this.
     return getUseSlowRC()  || getIsDeiniting()
-        ? 0xFFFFFFFF : getStrongExtraRefCount();
+        ? 0xFFFFFFFF : getStrongExtraRefCount() + 1;
   }
 
   LLVM_ATTRIBUTE_ALWAYS_INLINE
@@ -966,7 +968,7 @@ class RefCounts {
     return bits.isUniquelyReferenced();
   }
 
-  // Return whether the reference count is exactly 2.
+  // Return true iff the reference count is exactly 2.
   // Once deinit begins the reference count is undefined.
   bool isDuallyReferenced() const {
     auto bits = refCounts.load(SWIFT_MEMORY_ORDER_CONSUME);
@@ -1401,10 +1403,12 @@ class HeapObjectSideTableEntry {
     return refCounts.isUniquelyReferenced();
   }
 
+  // Returns true iff the strong reference count is exactly 2.
   bool isDuallyReferenced() const {
     return refCounts.isDuallyReferenced();
   }
 
+  // Returns the strong reference.
   uint32_t strongRefCount() const {
     return refCounts.strongRefCount();
   }

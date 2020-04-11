@@ -427,12 +427,15 @@ extension _SliceBuffer {
 }
 
 extension _SliceBuffer {
-  /// True iff `self` can be mutated by writing on elements even though its
-  /// buffer is not uniquely-referenced.
+  /// True iff `self` is an in place mutable slice of some
+  /// `[Contiguous]Array[Slice]` with no other extant references to the same
+  /// buffer.
+  ///
+  /// Such a buffer can safely have its elements mutated.
   @usableFromInline
   var isBorrowedAndNotReShared: Bool {
     mutating get {
-      return nativeBuffer._storage.isMutatingAsInPlaceSlice
+      return _hasNativeBuffer && nativeBuffer._storage.isBorrowed
           && isDuallyReferenced(&owner)
     }
   }

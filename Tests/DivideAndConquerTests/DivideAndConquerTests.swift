@@ -20,8 +20,10 @@ extension DivideAndConquer.ArraySlice {
     let base = withUnsafeBufferPointer { $0.baseAddress! }
     var reallocations = expectedFootprint.contains(base) ? 0 : 1
     if count < 1 { return reallocations }
-    
+
     if interference != nil && count > 1 {
+      // If interference is enabled, attempt to stress correctness by escaping
+      // self or mutating a copy of it.  Experiment with other stressors.
       if count % 2 == 0 {
         var x = self
         x[startIndex] = x[startIndex + 1]

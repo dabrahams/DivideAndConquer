@@ -75,9 +75,11 @@ struct HeapObject {
 extern "C" {
 #endif
 
+// Returns nonzero iff obj has exactly two strong references.
 SWIFT_RUNTIME_STDLIB_API
 __swift_uint8_t swift_isDuallyReferenced(HeapObject *obj);
     
+// Returns nonzero the number of strong references to obj.
 SWIFT_RUNTIME_STDLIB_API
 __swift_uint32_t swift_strongRefCount(HeapObject *obj);
     

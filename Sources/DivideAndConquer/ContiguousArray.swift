@@ -428,16 +428,19 @@ extension ContiguousArray: RandomAccessCollection, MutableCollection {
     _modify {
       _checkIndex(bounds.lowerBound)
       _checkIndex(bounds.upperBound)
+
+      let wasUnique = _buffer.isUniquelyReferenced()
       var y = ArraySlice(_buffer: _buffer[bounds])
-      let dualRef = isDuallyReferenced(&y._buffer.owner)
-      if dualRef {
-        _internalInvariant(!_buffer._storage.isMutatingAsInPlaceSlice)
-        _buffer._storage.isMutatingAsInPlaceSlice = true
+      
+      // If this array is a unique owner of its buffer, we can mark the slice as
+      // borrowed, allowing its elements to be mutated without a further copy.
+      if wasUnique {
+        _internalInvariant(!_buffer._storage.isBorrowed)
+        _buffer._storage.isBorrowed = true
       }
       yield &y
-      if dualRef {
-        _buffer._storage.isMutatingAsInPlaceSlice = false
-      }
+      if wasUnique { _buffer._storage.isBorrowed = false }
+      
       // If the replacement buffer has same identity, and the ranges match,
       // then this was a pinned in-place modification, nothing further needed.
       if self[bounds]._buffer.identity != y._buffer.identity

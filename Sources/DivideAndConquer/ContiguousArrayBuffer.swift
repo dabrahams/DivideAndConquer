@@ -37,13 +37,15 @@ public struct _CountAndCapacity {
     return Int(truncatingIfNeeded: capacityAndFlags >> 1)
   }
 
+  /// True iff one of the buffer's refcounts is accounted for by a
+  /// `[Contiguous]Array[Slice]` from which it is being mutably sliced.
   @inlinable
-  var isMutatingAsInPlaceSlice: Bool {
+  var isBorrowed: Bool {
     get {
       return (capacityAndFlags & 1) != 0
     }
     set {
-      if isMutatingAsInPlaceSlice != newValue { capacityAndFlags ^= 1 }
+      if isBorrowed != newValue { capacityAndFlags ^= 1 }
     }
   }
 
@@ -77,9 +79,9 @@ public
   }
 
   @usableFromInline
-  var isMutatingAsInPlaceSlice: Bool {
-    get { header.isMutatingAsInPlaceSlice }
-    set { header.isMutatingAsInPlaceSlice = newValue }
+  var isBorrowed: Bool {
+    get { header.isBorrowed }
+    set { header.isBorrowed = newValue }
   }
   
   @usableFromInline
