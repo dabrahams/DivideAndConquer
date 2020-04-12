@@ -432,7 +432,7 @@ extension ContiguousArray: RandomAccessCollection, MutableCollection {
       let wasUnique = _buffer.isUniquelyReferenced()
       var rhs = ArraySlice(_buffer: _buffer[bounds])
       
-      // If this array is a unique owner of its buffer, we can mark the slice as
+      // If this array was a unique owner of its buffer, we can mark the slice as
       // borrowed, allowing its elements to be mutated without a further copy.
       if wasUnique {
         _internalInvariant(!_buffer._storage.isBorrowed)
